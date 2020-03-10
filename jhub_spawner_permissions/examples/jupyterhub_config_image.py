@@ -1,5 +1,5 @@
 import sys
-from jhub_spawner_permissions import spawn_allowed
+#from jhub_spawner_permissions import spawn_allowed
 
 c = get_config()
 
@@ -19,9 +19,10 @@ c.SystemUserSpawner.container_spec = {
     'env': {'JUPYTER_ENABLE_LAB': '1'}
 }
 
-c.SystemUserSpawner.pre_spawn_hook = spawn_allowed
+# c.SystemUserSpawner.pre_spawn_hook = spawn_allowed
 
 c.JupyterHub.services = [{
     'name': 'jhub_spawner_permissions',
-    'command': [sys.executable, 'jhub_spawner_permissions/main.py']
-}]
+    'url': 'http://127.0.0.1:5000',
+    'command': [sys.executable, 'jhub_spawner_permissions/main.py']}
+]

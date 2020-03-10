@@ -67,6 +67,11 @@ class User(Base):
                                backref='users')
 
     @classmethod
+    def all(cls, db):
+        """Find all users."""
+        return db.query(cls).all()
+
+    @classmethod
     def find(cls, db, name):
         """Find a user by name.
         Returns None if not found.
