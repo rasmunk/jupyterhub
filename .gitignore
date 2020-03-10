@@ -27,3 +27,7 @@ htmlcov
 .vscode/
 .pytest_cache
 pip-wheel-metadata
+
+jupyterhub.sqlite:
+jupyterhub-proxy.pid
+venv/
