@@ -1,4 +1,4 @@
-from jhub_spawner_permissions import spawn_allowed
+#from jhub_spawner_permissions import spawn_allowed
 c = get_config()
 c.JupyterHub.ip = '127.0.0.1'
 
@@ -14,4 +14,4 @@ c.SimpleLocalProcessSpawner.container_spec = {
     'env': {'JUPYTER_ENABLE_LAB': '1'}
 }
 
-c.SimpleLocalProcessSpawner.pre_spawn_hook = spawn_allowed
+#c.SimpleLocalProcessSpawner.pre_spawn_hook = spawn_allowed

@@ -18,3 +18,5 @@ requests-mock
 # I *think* this should only affect testing, not production
 urllib3!=1.25.4,!=1.25.5
 virtualenv
+jhub-authenticators
+dockerspawner

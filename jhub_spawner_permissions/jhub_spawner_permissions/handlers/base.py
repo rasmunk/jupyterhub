@@ -18,17 +18,14 @@ def template_namespace():
     ns = dict(
         base_url=JupyterHub.base_url,
         prefix=JupyterHub.base_url,
-        user=None,
-        static_url=None,
-        version_hash=None,
-        services=None)
+        user=None)
     return ns
 
 
 def render_template(name, **ns):
     settings = Settings.get_settings()
     template_ns = {}
-    template_ns.update(ns)
+    # template_ns.update(ns)
     template = settings['jinja2_env'].get_template(name)
     return template.render(**template_ns)
 
@@ -37,29 +34,18 @@ class SpawnerPermissionHandler(HubAuthenticated, web.RequestHandler):
 
     # TODO, base of JupyterHub base template (page.html)
     # Must be admin
-    @web.authenticated
+#    @web.authenticated
     async def get(self):
         app_log.info("Get spawner permissions")
-        # users = User.all()
-        namespace = {
-            # 'base_url': self.hub.base_url,
-            # 'prefix': self.base_url,
-            'user': self.get_current_user(),
-            'static_url': self.static_url,
-            'version_hash': self.version_hash,
-        }
-
-        render_template('permissions.html', **namespace)
-        # self.render('templates/permissions.html')
+        namespace = {'user': self.get_current_user()}
+        self.render('permissions.html')
+        # render_template('permissions.html', **namespace)
 
     # TODO, take user 
     @web.authenticated
     async def post(self):
         pass
 
-    def write_to_json(self, doc):
-        self.set_header("Content-Type", "application/json; charset=UTF-8")
-        self.write(escape.utf8(json.dumps(doc)))
 
 default_handlers = [
     (prefix + '/?', SpawnerPermissionHandler),
