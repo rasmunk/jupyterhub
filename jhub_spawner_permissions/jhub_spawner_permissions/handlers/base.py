@@ -25,26 +25,38 @@ def template_namespace():
 def render_template(name, **ns):
     settings = Settings.get_settings()
     template_ns = {}
-    # template_ns.update(ns)
     template = settings['jinja2_env'].get_template(name)
     return template.render(**template_ns)
 
 
-class SpawnerPermissionHandler(HubAuthenticated, web.RequestHandler):
+class BaseHandler(HubAuthenticated, web.RequestHandler):
+
+    @property
+    def db(self):
+        return self.db
+
+
+class SpawnerPermissionHandler(BaseHandler):
 
     # TODO, base of JupyterHub base template (page.html)
     # Must be admin
-#    @web.authenticated
+    # @web.authenticated
     async def get(self):
-        app_log.info("Get spawner permissions")
-        namespace = {'user': self.get_current_user()}
-        self.render('permissions.html')
-        # render_template('permissions.html', **namespace)
+        users = User.all(self.db)
+        self.render('users.html', users=users)
 
-    # TODO, take user 
-    @web.authenticated
-    async def post(self):
-        pass
+    # # TODO, take user 
+    # @web.authenticated
+    # async def post(self):
+    #     pass
+
+    
+
+class UserPermissionHandler(BaseHandler):
+
+    async def get(self, user_id):
+        user = User.find(user_id, self.db)
+        self.render('user', user=user)
 
 
 default_handlers = [

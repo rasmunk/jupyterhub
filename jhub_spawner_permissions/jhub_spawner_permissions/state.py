@@ -5,7 +5,7 @@ class Settings:
 
     @staticmethod
     def get_settings():
-        template_paths = get_template_paths()
+        template_paths = get_template_paths()[1]
         settings = dict(
             template_path=template_paths
         )
