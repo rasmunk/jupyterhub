@@ -10,8 +10,7 @@
             </tr>
         {% for user in users %}
             <tr>
-                <td> User: <a href=""> {{ user.name }}</a></td>
-                <td><button class="button btn" onclick="{{ user.id }}"></td>
+                <td> User: <a href="/users/{{ user.id }}"> {{ user.name }}</a></td>
             </tr>
         {% endfor %}
         </table>

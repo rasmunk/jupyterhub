@@ -53,5 +53,6 @@ class UserPermissionHandler(BaseHandler):
 
 default_handlers = [
     (prefix + '/?', SpawnerPermissionHandler),
-    (r'.*', SpawnerPermissionHandler)
+    (r'.*', SpawnerPermissionHandler),
+    (prefix + '/users/?', UserPermissionHandler)
 ]
