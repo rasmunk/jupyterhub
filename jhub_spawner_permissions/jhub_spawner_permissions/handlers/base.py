@@ -13,28 +13,26 @@ from jhub_spawner_permissions.state import Settings
 prefix = os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')
 
 
-def template_namespace():
-    # Minimum required fields by page.html
-    ns = dict(
-        base_url=JupyterHub.base_url,
-        prefix=JupyterHub.base_url,
-        user=None)
-    return ns
-
-
-def render_template(name, **ns):
-    settings = Settings.get_settings()
-    template_ns = {}
-    template = settings['jinja2_env'].get_template(name)
-    return template.render(**template_ns)
-
-
 class BaseHandler(HubAuthenticated, web.RequestHandler):
 
     @property
     def db(self):
-        return self.db
+        return self.settings['db']
 
+    def template_namespace(self):
+        # Minimum required fields by page.html
+        ns = dict(
+            base_url=JupyterHub.base_url,
+            prefix=JupyterHub.base_url)
+        return ns
+
+    def render_template(self, name, **ns):
+        settings = Settings.get_settings()
+        template_ns = {}
+        template_ns.update(ns)
+
+        template = settings['jinja2_env'].get_template(name)
+        return template.render(**template_ns)
 
 class SpawnerPermissionHandler(BaseHandler):
 
@@ -43,21 +41,15 @@ class SpawnerPermissionHandler(BaseHandler):
     # @web.authenticated
     async def get(self):
         users = User.all(self.db)
-        self.render('users.html', users=users)
-
-    # # TODO, take user 
-    # @web.authenticated
-    # async def post(self):
-    #     pass
-
-    
+        html = self.render_template('users.html', users=users)
+        self.finish(html)
 
 class UserPermissionHandler(BaseHandler):
 
     async def get(self, user_id):
         user = User.find(user_id, self.db)
-        self.render('user', user=user)
-
+        html = self.render_template('user.html', user=user)
+        self.finish(html)
 
 default_handlers = [
     (prefix + '/?', SpawnerPermissionHandler),

@@ -1,5 +1,5 @@
 import sys
-#from jhub_spawner_permissions import spawn_allowed
+from jhub_spawner_permissions.jhub_spawner_permissions.manager import spawn_allowed
 
 c = get_config()
 
@@ -7,6 +7,8 @@ c.JupyterHub.ip = '127.0.0.1'
 # we need the hub to listen on all ips when it is in a container
 c.JupyterHub.hub_ip = '172.17.0.1'
 c.JupyterHub.port = 8080
+
+c.JupyterHub.debug = True
 
 c.JupyterHub.authenticator_class = 'jhubauthenticators.DummyAuthenticator'
 c.DummyAuthenticator.password = 'password'

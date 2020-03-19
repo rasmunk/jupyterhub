@@ -17,5 +17,4 @@ def spawn_allowed(spawner):
         if image not in user.images:
             raise PermissionError("You don't have permission to spawn {}"
                                   .format(image))
-
     return True

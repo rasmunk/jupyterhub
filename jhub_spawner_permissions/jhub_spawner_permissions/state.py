@@ -1,4 +1,4 @@
-from jhub_spawner_permissions.util import init_jinja_env, get_template_paths
+from jhub_spawner_permissions.util import init_jinja_env, get_template_paths, new_db_manager
 
 
 class Settings:
@@ -6,8 +6,11 @@ class Settings:
     @staticmethod
     def get_settings():
         template_paths = get_template_paths()[1]
+        db = new_db_manager()
+
         settings = dict(
-            template_path=template_paths
+            db=db.db,
+            template_path=template_paths,
         )
 
         jinja2_env = init_jinja_env()

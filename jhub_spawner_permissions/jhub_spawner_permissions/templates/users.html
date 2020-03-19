@@ -1,24 +1,19 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-</head>
+{% extends "base.html" %}
 
-<body>
-    <div class="main">
-        {% if users %}
-            <table>
-                <tr>
-                    <th>Name</th>
-                </tr>
-            {% for user in users %}
-                <tr>
-                    <td> User: {{ user.name }} </td>
-                </tr>
-                <tr>
-                    <td><button class="button btn" onclick="{{ user.id }}"></td>
-                </tr>
-            </table>
-        {% endif %}
-    </div>
-</body>
-</html>
+<p> users </p>
+
+{% block main %}
+    {% if users %}
+        <table>
+            <tr>
+                <th>Name</th>
+            </tr>
+        {% for user in users %}
+            <tr>
+                <td> User: <a href=""> {{ user.name }}</a></td>
+                <td><button class="button btn" onclick="{{ user.id }}"></td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}
