@@ -5,7 +5,7 @@ from tornado import escape
 from tornado.log import app_log
 from jupyterhub.app import JupyterHub
 from jupyterhub.services.auth import HubAuthenticated
-from jhub_spawner_permissions.orm import User
+from jhub_spawner_permissions.orm import User, Image
 from jhub_spawner_permissions.state import Settings
 
 # Get JupyterHub url prefix from env
@@ -47,12 +47,13 @@ class SpawnerPermissionHandler(BaseHandler):
 class UserPermissionHandler(BaseHandler):
 
     async def get(self, user_id):
-        user = User.find(user_id, self.db)
+        user = User.find(self.db, user_id)
+        images = Image.all(self.db)
         html = self.render_template('user.html', user=user)
         self.finish(html)
 
 default_handlers = [
-    (prefix + '/?', SpawnerPermissionHandler),
-    (r'.*', SpawnerPermissionHandler),
-    (prefix + '/users/?', UserPermissionHandler)
+    (prefix + r'users/([0-9]+)', UserPermissionHandler),
+    (prefix + r'users', SpawnerPermissionHandler),
+    (prefix + r'.*', SpawnerPermissionHandler),
 ]

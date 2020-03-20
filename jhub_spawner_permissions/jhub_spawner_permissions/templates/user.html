@@ -7,18 +7,21 @@
         <table>
             <tr>
                 <th>Image</th>
-                <th>Permission</th>
             </tr>
-        {% for image in images %}
+            <tr>
+                <th>Permissions</th>
+            </tr>
+        {% comment %} {% for image in images %}
             <tr>
                 <td> Image: {{ image.name }} </td>
             </tr>
-            {% for permission in image.permissions %}
+            {#% if image.id in user.images %}
+            {% for user_image in user.image %}
                 <tr>
                     <input type="checkbox" value="{{ permission.allowed }}">
                 </tr>
             {% endfor %}
-        {% endfor %}
+        {% endfor %} {% endcomment %}
         </table>
     {% endif %}
 {% endblock %}

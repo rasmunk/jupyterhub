@@ -1,5 +1,5 @@
 import sys
-from jhub_spawner_permissions.jhub_spawner_permissions.manager import spawn_allowed
+from jhub_spawner_permissions.jhub_spawner_permissions.manager import create_user_hook, permission_spawn_hook
 
 c = get_config()
 
@@ -13,15 +13,22 @@ c.JupyterHub.debug = True
 c.JupyterHub.authenticator_class = 'jhubauthenticators.DummyAuthenticator'
 c.DummyAuthenticator.password = 'password'
 
+# Ensure
+c.Authenticator.post_auth_hook = create_user_hook
+
 c.JupyterHub.spawner_class = 'dockerspawner.SystemUserSpawner'
 c.SystemUserSpawner.image = 'jupyter/base-notebook'
+
+# c.SystemUserSpawner.image_whitelist([
+#     'jupyter/base-notebook'
+# ])
 
 c.SystemUserSpawner.container_port = 8888
 c.SystemUserSpawner.container_spec = {
     'env': {'JUPYTER_LAB_ENABLE': '1'}
 }
 
-# c.SystemUserSpawner.pre_spawn_hook = spawn_allowed
+c.Spawner.pre_spawn_hook = permission_spawn_hook
 
 c.JupyterHub.services = [{
     'name': 'jhub_spawner_permissions',

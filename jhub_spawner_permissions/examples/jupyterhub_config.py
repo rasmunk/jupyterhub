@@ -14,4 +14,6 @@ c.SimpleLocalProcessSpawner.container_spec = {
     'env': {'JUPYTER_ENABLE_LAB': '1'}
 }
 
+
+
 #c.SimpleLocalProcessSpawner.pre_spawn_hook = spawn_allowed

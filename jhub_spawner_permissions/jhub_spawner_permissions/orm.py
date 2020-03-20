@@ -1,9 +1,12 @@
+import time
+from sqlalchemy import BigInteger
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import Table
 from sqlalchemy import Unicode
+from sqlalchemy import Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.engine import create_engine
@@ -14,69 +17,53 @@ from sqlalchemy.exc import OperationalError
 Base = declarative_base()
 
 
-class Permission(Base):
+class AppBase(object):
+
+    @classmethod
+    def all(cls, db):
+        return db.query(cls).all()
+
+    @classmethod
+    def find(cls, db, first=False, **kwargs):
+        if first:
+            return db.query(cls).filter_by(**kwargs).first()
+        else:
+            return db.query(cls).filter_by(**kwargs)
+
+
+class Permission(AppBase, Base):
     """Permission Table"""
 
     __tablename__ = 'permissions'
-    id = Column(Integer, primary_key=True)
-    permanent_allow = Column(Boolean(), default=False)
-    # Possibly add timestamp
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    allowed = Column(Boolean(), default=False)
 
 
-user_permission_map = Table(
-    'user_permission_map',
-    Base.metadata,
-    Column('user_id', ForeignKey('users.id', ondelete='CASCADE'),
-           primary_key=True),
-    Column('permission_id', ForeignKey('permissions.id', ondelete='CASCADE'),
-           primary_key=True)
-)
-
-
-class Image(Base):
+class Image(AppBase, Base):
     """Table for Images"""
 
     __tablename__ = 'images'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Unicode(255), default='', unique=True)
 
-    @classmethod
-    def find(cls, db, name):
-        return db.query(cls).filter(cls.name == name).first()
+
+class UserImagePermissions(AppBase, Base):
+    __tablename__ = 'user_image_permissions'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    image_id = Column(Integer, ForeignKey('images.id', ondelete='CASCADE'))
+    permission_id = Column(Integer, ForeignKey('permissions.id', ondelete='CASCADE'))
+
+    user = relationship('User')
+    image = relationship('Image')
+    permission = relationship('Permission')
 
 
-user_image_map = Table(
-    'user_image_map',
-    Base.metadata,
-    Column('user_id', ForeignKey('users.id', ondelete='CASCADE'),
-           primary_key=True),
-    Column('image_id', ForeignKey('images.id', ondelete='CASCADE'),
-           primary_key=True)
-)
-
-
-class User(Base):
+class User(AppBase, Base):
     """Table for users"""
-
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Unicode(255), unique=True)
-    images = relationship('Image', secondary='user_image_map',
-                          backref='users')
-    permissions = relationship('Permission', secondary='user_permission_map',
-                               backref='users')
-
-    @classmethod
-    def all(cls, db):
-        """Find all users."""
-        return db.query(cls).all()
-
-    @classmethod
-    def find(cls, db, name):
-        """Find a user by name.
-        Returns None if not found.
-        """
-        return db.query(cls).filter(cls.name == name).first()
 
 
 class DBConnectionManager:
@@ -95,5 +82,11 @@ class DBConnectionManager:
     def add(self, obj):
         self.db.add(obj)
 
+    def add_all(self, obj):
+        self.db.add_all(obj)
+
     def commit(self):
         self.db.commit()
+
+    def close(self):
+        self.db.close()

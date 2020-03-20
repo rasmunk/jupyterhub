@@ -1,20 +1,130 @@
 from tornado import gen
-from .orm import User
+from traitlets.config import LoggingConfigurable
+from .orm import User, Image, Permission, UserImagePermissions
 from .orm import DBConnectionManager
+
+PACKAGE_NAME = "SpawnerPermissions"
+
+@gen.coroutine
+def create_user_hook(authenticator, handler, authentication):
+    """ Creates the authenticated user in ther permissions DB """
+
+    name = authentication['name']
+    db_manager = DBConnectionManager()
+    user = User.find(db_manager.db, first=True, name=name)
+    if not user:
+        user = User(name=name)
+        db_manager.add(user)
+        try:
+            db_manager.commit()
+            db_manager.close()
+        except Exception:
+            # Log failure
+            db_manager.close()
+            return authentication
+    return authentication
+
+    # permission = Permission.find(db_manager.db,
+    #                              first=True,
+    #                              allowed=False)
+    # if not permission:
+    #     # First time
+    #     permission = Permission(allowed=False)
+
+    # images = Image.all(db_manager.db)
+    # rows = []
+    # for image in images:
+    #     uid = UserImagePermissions(user=user,
+    #                                image=image,
+    #                                permission=permission)
+    #     rows.append(uid)
+
+@gen.coroutine
+def permission_spawn_hook(spawner):
+    """ Primary pre_spawn_hook for authenticating the spawn """
+
+    logger = spawner.log
+    username = spawner.user.name
+    image = yield get_spawner_image(spawner)
+    if not image:
+        logger.error("{} - a valid image was "
+                     "not provided by the spawner".format(PACKAGE_NAME))
+        return False
+
+    db_manager = DBConnectionManager()
+    prepared = yield prepare_image(db_manager, image)
+    if not prepared:
+        return False
+
+    db_user = User.find(db_manager.db, first=True, name=username)
+    if not db_user:
+        # Ensure that the authenticator calls `create_user_hook`
+        # upon a successfull login to create the user in the DB
+        # TODO, Raise exception with message
+        logger.error("{} - the provided user {} doesn't exist in the db"
+                     .format(PACKAGE_NAME, username))
+        return False
+
+    # Find permissions for that particular user
+    db_image = Image.find(db_manager.db, first=True, name=image)
+    uid = UserImagePermissions.find(db_manager.db, first=True,
+                                    user=db_user, image=db_image)
+    if not uid:
+        # The default permission is allowed
+        db_permission = Permission.find(db_manager.db, first=True,
+                                        allowed=True)
+        if not db_permission:
+            # Create new permission with `allowed=True`
+            db_permission = Permission(allowed=True)
+
+        uid = UserImagePermissions(user=db_user, image=db_image,
+                                   permission=db_permission)
+        db_manager.add(uid)
+        try:
+            db_manager.commit()
+        except Exception as err:
+            logger.error("{} - failed to add user: {} permissions to the db, err: {}"
+                         .format(PACKAGE_NAME, username, err))
+            return False
+        finally:
+            db_manager.close()
+    
+    if not uid.permission.allowed:
+        raise PermissionError("You don't have permission to spawn {}"
+                                .format(image))
+    return True
 
 
 @gen.coroutine
-def spawn_allowed(spawner):
-    db_manager = DBConnectionManager()
-    user = User.find(db_manager.db, spawner.user.name)
-    if not user:
-        user = User(name=spawner.user.name)
-        db_manager.add(user)
-        db_manager.commit()
+def get_spawner_image(spawner):
+    """ Validates that the spawner provides a selected image to validate
+    permissions against """
 
+    logger = spawner.log
+    logger.info("{} - validating spawner".format(PACKAGE_NAME))
+    # So far the convention seems to be that the spawner image attribute
+    # is defined as `image`
     if hasattr(spawner, 'image'):
-        image = spawner.image
-        if image not in user.images:
-            raise PermissionError("You don't have permission to spawn {}"
-                                  .format(image))
+        image = getattr(spawner, 'image')
+        if isinstance(image, str):
+            return image
+    return False
+
+
+# Register spawner images
+@gen.coroutine
+def prepare_image(db_manager, image):
+    """ """
+
+    db_image = Image.find(db_manager.db, first=True, name=image)
+    if not db_image:
+        # Save the image to the DB
+        new_image = Image(name=image)
+        db_manager.add(new_image)
+        try:
+            db_manager.commit()
+        except Exception:
+            return False
+        finally:
+            db_manager.close()
     return True
