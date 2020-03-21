@@ -13,6 +13,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 
+PACKAGE_NAME = "SpawnerPermissions"
 
 Base = declarative_base()
 
@@ -70,6 +71,7 @@ class DBConnectionManager:
 
     db = None
 
+    # TODO, add logger
     def __init__(self, url="sqlite:///jupyterhub.sqlite:", **kwargs):
         try:
             engine = create_engine(url, **kwargs)
@@ -86,7 +88,12 @@ class DBConnectionManager:
         self.db.add_all(obj)
 
     def commit(self):
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception as err:
+    #        logger.error("{} - failed to execute db commit, err: {}".format(PACKAGE_NAME, err))
+            return False
+        return True
 
     def close(self):
         self.db.close()

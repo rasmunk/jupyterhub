@@ -2,6 +2,7 @@ from tornado import gen
 from traitlets.config import LoggingConfigurable
 from .orm import User, Image, Permission, UserImagePermissions
 from .orm import DBConnectionManager
+from .error import NotAllowedError, SetupPermissionError
 
 PACKAGE_NAME = "SpawnerPermissions"
 
@@ -76,21 +77,25 @@ def permission_spawn_hook(spawner):
         if not db_permission:
             # Create new permission with `allowed=True`
             db_permission = Permission(allowed=True)
+            db_manager.add(db_permission)
+            if not db_manager.commit():
+                logger.error("{} - failed to add Permission: {}".format(PACKAGE_NAME,
+                db_permission))
+                return False
 
         uid = UserImagePermissions(user=db_user, image=db_image,
                                    permission=db_permission)
         db_manager.add(uid)
-        try:
-            db_manager.commit()
-        except Exception as err:
-            logger.error("{} - failed to add user: {} permissions to the db, err: {}"
-                         .format(PACKAGE_NAME, username, err))
-            return False
-        finally:
-            db_manager.close()
+        if not db_manager.commit():
+            logger.error("{} - failed to add UserImagePermission: {}".format(PACKAGE_NAME,
+            uid))
+            raise SetupPermissionError("Failed to setup your permissions")
     
     if not uid.permission.allowed:
-        raise PermissionError("You don't have permission to spawn {}"
+        logger.info("{} - user {} tried to spawn {} without permission".format(
+            PACKAGE_NAME, username, image
+        ))
+        raise NotAllowedError("You don't have permission to spawn {}"
                                 .format(image))
     return True
 
