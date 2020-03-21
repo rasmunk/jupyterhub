@@ -1,0 +1,3 @@
+[submodule "spawner_permissions"]
+	path = spawner_permissions
+	url = git@github.com:ucphhpc/spawner_permissions.git
