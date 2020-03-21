@@ -25,20 +25,6 @@ def create_user_hook(authenticator, handler, authentication):
             return authentication
     return authentication
 
-    # permission = Permission.find(db_manager.db,
-    #                              first=True,
-    #                              allowed=False)
-    # if not permission:
-    #     # First time
-    #     permission = Permission(allowed=False)
-
-    # images = Image.all(db_manager.db)
-    # rows = []
-    # for image in images:
-    #     uid = UserImagePermissions(user=user,
-    #                                image=image,
-    #                                permission=permission)
-    #     rows.append(uid)
 
 @gen.coroutine
 def permission_spawn_hook(spawner):
