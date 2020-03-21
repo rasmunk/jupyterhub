@@ -31,3 +31,5 @@ pip-wheel-metadata
 jupyterhub.sqlite:
 jupyterhub-proxy.pid
 venv/
+
+*.sqlite
