@@ -2,7 +2,7 @@ from tornado import gen
 from traitlets.config import LoggingConfigurable
 from .orm import User, Image, Permission, UserImagePermissions
 from .orm import DBConnectionManager
-from .error import NotAllowedError, SetupPermissionError
+from .error import NotAllowedError, SetupPermissionError, SetupUserError, SetupImageError
 
 PACKAGE_NAME = "SpawnerPermissions"
 
@@ -16,13 +16,12 @@ def create_user_hook(authenticator, handler, authentication):
     if not user:
         user = User(name=name)
         db_manager.add(user)
-        try:
-            db_manager.commit()
+        if not db_manager.commit():
             db_manager.close()
-        except Exception:
-            # Log failure
-            db_manager.close()
-            return authentication
+            raise SetupUserError("Failed to setup the your user "
+                                 "account: {} in the {} DB"
+                                 .format(name, PACKAGE_NAME))
+        db_manager.close()
     return authentication
 
 
@@ -41,7 +40,8 @@ def permission_spawn_hook(spawner):
     db_manager = DBConnectionManager()
     prepared = yield prepare_image(db_manager, image)
     if not prepared:
-        return False
+        raise SetupImageError("Failed to setup the image: {} in the {} DB"
+                              .format(image, PACKAGE_NAME))
 
     db_user = User.find(db_manager.db, first=True, name=username)
     if not db_user:
@@ -113,10 +113,6 @@ def prepare_image(db_manager, image):
         # Save the image to the DB
         new_image = Image(name=image)
         db_manager.add(new_image)
-        try:
-            db_manager.commit()
-        except Exception:
+        if not db_manager.commit():
             return False
-        finally:
-            db_manager.close()
     return True
