@@ -47,10 +47,11 @@ def permission_spawn_hook(spawner):
     if not db_user:
         # Ensure that the authenticator calls `create_user_hook`
         # upon a successfull login to create the user in the DB
-        # TODO, Raise exception with message
         logger.error("{} - the provided user {} doesn't exist in the db"
                      .format(PACKAGE_NAME, username))
-        return False
+        raise SetupPermissionError("Your user account: {} doesn't exist "
+                                   "in the database, please try and reauthenticate"
+                                   .format(username))
 
     # Find permissions for that particular user
     db_image = Image.find(db_manager.db, first=True, name=image)
@@ -67,7 +68,7 @@ def permission_spawn_hook(spawner):
             if not db_manager.commit():
                 logger.error("{} - failed to add Permission: {}".format(PACKAGE_NAME,
                 db_permission))
-                return False
+                raise SetupPermissionError("Failed to setup your permissions")
 
         uid = UserImagePermissions(user=db_user, image=db_image,
                                    permission=db_permission)
