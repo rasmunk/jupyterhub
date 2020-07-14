@@ -1,0 +1,3 @@
+[submodule "multiplespawner"]
+	path = multiplespawner
+	url = git@github.com:ucphhpc/multiplespawner.git
